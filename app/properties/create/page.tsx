@@ -44,9 +44,21 @@ export default function CreatePropertyPage() {
       const session = await getSession();
       const token = session?.user?.token;
       
+      console.log('Session:', session);
+      console.log('Token:', token);
+
       if (!token) {
         throw new Error("Non authentifié");
       }
+
+      const requestData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        images,
+        features: [],
+      };
+
+      console.log('Request data:', requestData);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings`, {
         method: "POST",
@@ -54,24 +66,19 @@ export default function CreatePropertyPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          images,
-          features: [],
-        }),
+        credentials: 'include',
+        body: JSON.stringify(requestData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Erreur lors de la création");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de la création");
       }
 
       toast.success("Annonce créée avec succès");
       router.push("/properties");
     } catch (error) {
-      console.error("Erreur création:", error);
+      console.error("Erreur détaillée:", error);
       toast.error(error instanceof Error ? error.message : "Erreur lors de la création de l'annonce");
     } finally {
       setIsLoading(false);
