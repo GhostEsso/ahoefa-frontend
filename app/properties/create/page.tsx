@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, getSession } from "next-auth/react";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function CreatePropertyPage() {
   const { data: session, status } = useSession();
@@ -22,6 +23,7 @@ export default function CreatePropertyPage() {
     location: "",
     address: "",
   });
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -38,8 +40,8 @@ export default function CreatePropertyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
+      const session = await getSession();
       const token = session?.user?.token;
       
       if (!token) {
@@ -55,8 +57,8 @@ export default function CreatePropertyPage() {
         body: JSON.stringify({
           ...formData,
           price: parseFloat(formData.price),
+          images,
           features: [],
-          images: [],
         }),
       });
 
@@ -125,7 +127,7 @@ export default function CreatePropertyPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Type d'annonce</label>
+          <label className="block text-sm font-medium mb-2">Type d&apos;annonce</label>
           <Select onValueChange={(value) => setFormData({ ...formData, listingType: value })}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionner" />
@@ -153,6 +155,18 @@ export default function CreatePropertyPage() {
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Images</label>
+          <ImageUpload
+            value={images}
+            onChange={(url) => setImages((current) => [...current, url])}
+            onRemove={(url) => setImages((current) => current.filter((i) => i !== url))}
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            Ajoutez jusqu&apos;à 5 images de votre propriété
+          </p>
         </div>
 
         <Button type="submit" disabled={isLoading}>

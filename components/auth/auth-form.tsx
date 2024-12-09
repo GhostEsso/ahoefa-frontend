@@ -25,6 +25,7 @@ export function AuthForm({ mode, plan }: AuthFormProps) {
     firstName: "",
     lastName: "",
     phoneNumber: "",
+    organization: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,6 +96,22 @@ export function AuthForm({ mode, plan }: AuthFormProps) {
     });
   };
 
+  // Déterminer le rôle et le label selon le plan
+  const getRoleInfo = () => {
+    switch (plan) {
+      case 'basic':
+        return { role: 'AGENT', label: 'Agent' };
+      case 'standard':
+        return { role: 'AGENT', label: 'Agent Standard' };
+      case 'premium':
+        return { role: 'AGENT_PREMIUM', label: 'Agent Premium' };
+      default:
+        return { role: 'USER', label: 'Utilisateur' };
+    }
+  };
+
+  const roleInfo = getRoleInfo();
+
   return (
     <div className="w-full max-w-md space-y-8">
       <div className="text-center">
@@ -155,6 +172,36 @@ export function AuthForm({ mode, plan }: AuthFormProps) {
                 className="mt-1"
               />
             </div>
+
+            {plan && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Type de compte</label>
+                  <Input
+                    type="text"
+                    value={roleInfo.label}
+                    disabled
+                    className="bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="organization" className="block text-sm font-medium mb-2">
+                    Organisation
+                  </label>
+                  <Input
+                    id="organization"
+                    name="organization"
+                    type="text"
+                    required
+                    value={formData.organization}
+                    onChange={handleChange}
+                    placeholder="Nom de votre agence immobilière"
+                    className="mt-1"
+                  />
+                </div>
+              </>
+            )}
           </>
         )}
 
