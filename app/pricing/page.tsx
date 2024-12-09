@@ -24,6 +24,24 @@ const plans = [
     popular: false
   },
   {
+    name: "Standard",
+    price: "2,500",
+    currency: "FCFA",
+    period: "/mois",
+    description: "Pour les agents en développement",
+    features: [
+      "10 publications par mois",
+      "5 images par annonce",
+      "Messagerie avancée",
+      "Profil agent vérifié",
+      "Support prioritaire",
+      "Statistiques de base",
+      "Badge Standard"
+    ],
+    href: "/register?plan=standard",
+    popular: false
+  },
+  {
     name: "Premium",
     price: "5,000",
     currency: "FCFA",
@@ -60,7 +78,7 @@ export default function PricingPage() {
         </div>
 
         {/* Cartes de prix */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -95,7 +113,7 @@ export default function PricingPage() {
                         : "bg-gray-900 hover:bg-gray-800"
                     }`}
                   >
-                    {plan.popular ? "Devenir Premium" : "Commencer gratuitement"}
+                    {plan.name === "Basic" ? "Commencer gratuitement" : `Choisir ${plan.name}`}
                   </Button>
                 </Link>
 
@@ -155,38 +173,20 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h3 className="font-semibold mb-2">
-                Comment fonctionne la formule gratuite ?
+                Comment fonctionnent les différentes formules ?
               </h3>
               <p className="text-gray-600">
-                La formule Basic vous permet de publier jusqu'à 3 annonces par mois avec
-                2 images par annonce. Parfait pour débuter !
+                Chaque formule offre des fonctionnalités adaptées à votre niveau d'activité. 
+                Vous pouvez commencer gratuitement et évoluer selon vos besoins.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">
-                Puis-je passer au Premium plus tard ?
+                Puis-je changer de formule à tout moment ?
               </h3>
               <p className="text-gray-600">
-                Oui, vous pouvez upgrader votre compte à tout moment pour profiter
-                des avantages Premium.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">
-                Comment sont gérés les paiements ?
-              </h3>
-              <p className="text-gray-600">
-                Nous acceptons les paiements via Flooz et TMoney. La facturation est
-                mensuelle avec renouvellement automatique.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">
-                Y a-t-il un engagement de durée ?
-              </h3>
-              <p className="text-gray-600">
-                Non, vous pouvez annuler votre abonnement Premium à tout moment.
-                La formule Basic reste toujours gratuite.
+                Oui, vous pouvez upgrader ou downgrader votre compte à tout moment 
+                pour vous adapter à vos besoins.
               </p>
             </div>
           </div>

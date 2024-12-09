@@ -38,8 +38,12 @@ export default function SuperAdminLoginPage() {
             localStorage.setItem("token", data.token);
             toast.success("Connexion réussie");
             router.push("/superadmin/dashboard");
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Une erreur est survenue");
+            }
         } finally {
             setIsLoading(false);
         }

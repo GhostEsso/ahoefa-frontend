@@ -39,10 +39,11 @@ export default function PropertyDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  useAuth();
 
   useEffect(() => {
     fetchPropertyDetails();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchPropertyDetails = async () => {
@@ -64,6 +65,7 @@ export default function PropertyDetailsPage() {
       if (data.images.length > 0) {
         setSelectedImage(data.images[0]);
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erreur lors du chargement des détails");
     } finally {
@@ -192,20 +194,20 @@ export default function PropertyDetailsPage() {
                       onClick={() => setIsChatModalOpen(true)}
                     >
                       <MessageCircle className="w-4 h-4 mr-2" />
-                      Contacter l'agent
+                      Contacter l&apos;agent
                     </Button>
                   </>
                 ) : (
                   <>
                     <p className="text-sm text-gray-500 mb-4">
-                      Cet agent n'est pas premium. Contactez l'administrateur pour plus d'informations.
+                      Cet agent n&apos;est pas premium. Contactez l&apos;administrateur pour plus d&apos;informations.
                     </p>
                     <Button
                       className="w-full"
                       onClick={() => window.location.href = `mailto:${process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL}`}
                     >
                       <Mail className="w-4 h-4 mr-2" />
-                      Contacter l'administrateur
+                      Contacter l&apos;administrateur
                     </Button>
                   </>
                 )}

@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { HeroCarousel } from "@/components/hero-carousel";
-import { SearchBar } from "@/components/search-bar";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export function HeroSection() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -32,7 +33,13 @@ export function HeroSection() {
       <div className="relative z-10 container mx-auto px-4">
         <div className="text-center">
           <HeroCarousel />
-          <SearchBar />
+          <div className="mt-8">
+            <Link href="/properties">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                Découvrir nos propriétés
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

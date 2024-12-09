@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-
+import React from "react";
 import { HomeIcon, MapPinIcon, SearchIcon } from "lucide-react";
 import { HeroSection } from "@/components/hero-section";
 import { PropertiesSection } from "@/components/properties-section";
@@ -27,13 +26,13 @@ export default function Home() {
               },
               {
                 icon: MapPinIcon,
-                title: "Localisation précise",
-                description: "Trouvez exactement où vous voulez vivre",
+                title: "Agents vérifiés",
+                description: "Des professionnels de confiance",
               },
               {
                 icon: SearchIcon,
                 title: "Recherche facile",
-                description: "Interface intuitive et recherche avancée",
+                description: "Interface intuitive et moderne",
               },
             ].map((feature, index) => (
               <article key={index} className="text-center">

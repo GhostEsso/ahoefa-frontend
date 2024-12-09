@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, User, LogOut, Settings } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { Menu } from "lucide-react";
+import { signOut } from "next-auth/react";
 import {
   Sheet,
   SheetContent,
@@ -12,12 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { useSession } from "next-auth/react";
 
 const navigationLinks = [
   { href: "/properties", label: "Propriétés" },
@@ -27,35 +21,7 @@ const navigationLinks = [
 ];
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { data: session, status } = useSession();
-  const isAuthenticated = status === 'authenticated';
-
-  const handleLogout = () => {
-    signOut({ callbackUrl: '/' });
-  };
-
-  const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <User className="h-5 w-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild>
-          <Link href="/profile" className="flex items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Profil</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Déconnexion</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  const { data: session } = useSession();
 
   return (
     <header className="w-full border-b">
@@ -63,42 +29,44 @@ export function Navbar() {
         <Link href="/" className="font-bold text-xl">
           Ahoefa
         </Link>
-        
-        {/* Navigation desktop */}
-        <div className="hidden md:flex items-center gap-6">
-          {navigationLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm hover:text-blue-600"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Link href="/pricing">
-            <Button variant="outline" className="text-sm">
-              Devenir Agent
-            </Button>
+
+        <div className="hidden md:flex items-center space-x-8">
+          <Link href="/properties" className="text-sm hover:text-blue-600">
+            Propriétés
+          </Link>
+          <Link href="/agents" className="text-sm hover:text-blue-600">
+            Agents
+          </Link>
+          <Link href="/about" className="text-sm hover:text-blue-600">
+            À propos
+          </Link>
+          <Link href="/contact" className="text-sm hover:text-blue-600">
+            Contact
           </Link>
         </div>
 
-        {/* Boutons de connexion desktop */}
-        <div className="hidden md:flex items-center gap-4">
-          {isAuthenticated ? (
-            <UserMenu />
+        <div className="hidden md:flex items-center space-x-4">
+          {session ? (
+            <>
+              <Link href="/agent/listings">
+                <Button variant="default">Mes Annonces</Button>
+              </Link>
+              <Button variant="outline" onClick={() => signOut()}>
+                Déconnexion
+              </Button>
+            </>
           ) : (
             <>
               <Link href="/login">
-                <Button variant="outline">Connexion</Button>
+                <Button variant="ghost">Connexion</Button>
               </Link>
               <Link href="/register">
-                <Button>S'inscrire</Button>
+                <Button variant="outline">Inscription</Button>
               </Link>
             </>
           )}
         </div>
 
-        {/* Menu mobile */}
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
@@ -121,43 +89,42 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="h-px bg-gray-200 my-2" />
-              <Link href="/pricing" className="py-2">
-                <Button variant="outline" className="w-full">
-                  Devenir Agent
-                </Button>
-              </Link>
-              
-              {/* Boutons de connexion mobile */}
-              <div className="h-px bg-gray-200 my-2" />
-              {isAuthenticated ? (
-                <>
-                  <Link href="/profile">
-                    <Button variant="outline" className="w-full">
-                      Profil
+              <div className="flex flex-col gap-3">
+                {session ? (
+                  <>
+                    <Link href="/agent/listings">
+                      <Button variant="default" className="w-full">
+                        Mes Annonces
+                      </Button>
+                    </Link>
+                    <Button 
+                      className="w-full text-red-600" 
+                      variant="outline"
+                      onClick={() => signOut()}
+                    >
+                      Déconnexion
                     </Button>
-                  </Link>
-                  <Button 
-                    className="w-full text-red-600" 
-                    variant="outline"
-                    onClick={handleLogout}
-                  >
-                    Déconnexion
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <Button variant="outline" className="w-full">
+                        Connexion
+                      </Button>
+                    </Link>
+                    <Link href="/register">
+                      <Button className="w-full">
+                        S&apos;inscrire
+                      </Button>
+                    </Link>
+                  </>
+                )}
+                <Link href="/pricing" className="py-2">
+                  <Button variant="outline" className="w-full">
+                    Devenir Agent
                   </Button>
-                </>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <Link href="/login">
-                    <Button variant="outline" className="w-full">
-                      Connexion
-                    </Button>
-                  </Link>
-                  <Link href="/register">
-                    <Button className="w-full">
-                      S'inscrire
-                    </Button>
-                  </Link>
-                </div>
-              )}
+                </Link>
+              </div>
             </div>
           </SheetContent>
         </Sheet>

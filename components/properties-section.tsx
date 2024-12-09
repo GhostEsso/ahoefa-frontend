@@ -3,15 +3,8 @@
 import { useEffect, useState } from "react";
 import { PropertyCard } from "@/components/property-card";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface Property {
   id: string;
@@ -32,50 +25,27 @@ interface Property {
 
 export function PropertiesSection() {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [listingTypeFilter, setListingTypeFilter] = useState("all");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     fetchProperties();
   }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      const filtered = properties.filter(property => {
-        const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            property.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            property.location.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesType = typeFilter === 'all' || property.type === typeFilter;
-        const matchesListingType = listingTypeFilter === 'all' || property.listingType === listingTypeFilter;
-
-        return matchesSearch && matchesType && matchesListingType;
-      });
-      setFilteredProperties(filtered);
-    }
-  }, [properties, searchTerm, typeFilter, listingTypeFilter, mounted]);
 
   const fetchProperties = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/public`);
-      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Erreur lors du chargement des propriétés');
       }
       
       const data = await response.json();
-      const sortedProperties = data.sort((a: Property, b: Property) => {
-        if (a.user.isPremium && !b.user.isPremium) return -1;
-        if (!a.user.isPremium && b.user.isPremium) return 1;
-        return 0;
-      });
-
-      setProperties(sortedProperties);
+      
+      // Filtrer uniquement les annonces des agents premium et limiter à 9
+      const premiumProperties = data
+        .filter((property: Property) => property.user.isPremium)
+        .slice(0, 9);
+      
+      setProperties(premiumProperties);
     } catch (error) {
       console.error("Erreur lors du chargement des propriétés:", error);
     } finally {
@@ -83,49 +53,48 @@ export function PropertiesSection() {
     }
   };
 
-  const loadMore = () => {
-    setPage(prev => prev + 1);
-  };
+  if (isLoading) {
+    return (
+      <div className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8 text-center">
-          Propriétés en vedette
-        </h2>
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, index) => (
-              <div 
-                key={index}
-                className="h-[400px] rounded-lg bg-gray-100 animate-pulse"
-              />
-            ))}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">
+            Propriétés Premium en vedette
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Découvrez notre sélection des meilleures propriétés proposées par nos agents premium
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {properties.map((property) => (
+            <PropertyCard key={property.id} property={property} />
+          ))}
+        </div>
+
+        {properties.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            Aucune propriété premium disponible pour le moment
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProperties.map((property: Property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-            {filteredProperties.length < properties.length && (
-              <div className="mt-8 text-center">
-                <button
-                  onClick={loadMore}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Voir plus de propriétés
-                </button>
-              </div>
-            )}
-          </>
+          <div className="text-center mt-12">
+            <Link href="/properties">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                Voir toutes les propriétés
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
     </section>
   );
-} 
-
-function setPage(arg0: (prev: any) => any) {
-    throw new Error("Function not implemented.");
 }

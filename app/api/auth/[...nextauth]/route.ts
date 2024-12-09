@@ -2,61 +2,78 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 const prisma = new PrismaClient();
 
-const handler = NextAuth({
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.token) {
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              name: `${data.user.firstName} ${data.user.lastName}`,
+              role: data.user.role,
+              token: data.token
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
+        }
+      }
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      try {
-        // Vérifier si l'utilisateur existe déjà
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
-
-        if (!existingUser) {
-          // Créer un nouvel utilisateur
-          await prisma.user.create({
-            data: {
-              email: user.email!,
-              firstName: profile?.given_name || "",
-              lastName: profile?.family_name || "",
-              password: "", // Mot de passe vide pour les utilisateurs Google
-              role: "USER",
-              isVerified: true,
-            },
-          });
-        }
-
-        return true;
-      } catch (error) {
-        console.error("Erreur lors de la connexion:", error);
-        return false;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.accessToken = user.token;
       }
+      return token;
     },
-    async session({ session, user }) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.token = token.accessToken;
       }
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      return `${baseUrl}/properties`;
     },
   },
   pages: {
     signIn: '/login',
     error: '/error',
   },
+  session: {
+    strategy: "jwt",
+  },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST }; 

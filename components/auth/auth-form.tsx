@@ -10,9 +10,10 @@ import { toast } from "react-hot-toast";
 
 interface AuthFormProps {
   mode: "login" | "register";
+  plan?: string | null;
 }
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, plan }: AuthFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,38 +41,35 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (mode === "login") {
-        // Connexion classique
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          }),
+        const result = await signIn("credentials", {
+          redirect: false,
+          email: formData.email,
+          password: formData.password,
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Erreur de connexion");
+        if (result?.error) {
+          throw new Error(result.error);
         }
 
-        // Stocker le token
-        document.cookie = `token=${data.token}; path=/`;
-        
-        // Rediriger vers la page précédente ou /properties
-        const returnTo = searchParams.get('from') || '/properties';
-        router.push(returnTo);
+        toast.success('Connexion réussie');
+        router.push('/properties');
       } else {
-        // Inscription classique
+        // Déterminer le rôle en fonction du plan
+        const role = plan === 'premium' ? 'AGENT_PREMIUM' : 
+                    plan === 'standard' ? 'AGENT' : 
+                    'USER';
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            ...formData,
+            role,
+            agentStatus: role.includes('AGENT') ? 'PENDING' : undefined,
+            isPremium: role === 'AGENT_PREMIUM'
+          }),
         });
 
         const data = await response.json();
@@ -83,9 +81,9 @@ export function AuthForm({ mode }: AuthFormProps) {
         toast.success("Compte créé avec succès");
         router.push("/login");
       }
-    } catch (error: any) {
-      setError(error.message);
-      toast.error(error.message);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Une erreur est survenue");
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue");
     } finally {
       setIsLoading(false);
     }

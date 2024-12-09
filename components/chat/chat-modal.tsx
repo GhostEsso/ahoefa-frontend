@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "../ui/button"; 
+import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Send } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -46,6 +46,7 @@ export function ChatModal({ isOpen, onClose, propertyId, agentId }: ChatModalPro
       setMessage("");
       onClose();
       toast.success("Message envoyé avec succès");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Erreur lors de l'envoi du message");
     } finally {
@@ -57,7 +58,7 @@ export function ChatModal({ isOpen, onClose, propertyId, agentId }: ChatModalPro
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Envoyer un message à l'agent</DialogTitle>
+          <DialogTitle>Envoyer un message à l&apos;agent</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <Textarea

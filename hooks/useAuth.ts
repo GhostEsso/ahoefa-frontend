@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
+
+  // Liste des routes publiques
+  const publicRoutes = ['/', '/about', '/contact', '/login', '/register'];
 
   useEffect(() => {
     const checkAuth = () => {
@@ -17,7 +21,8 @@ export function useAuth() {
       setIsAuthenticated(isAuth);
       setIsLoading(false);
 
-      if (!isAuth) {
+      // Ne rediriger que si ce n'est pas une route publique
+      if (!isAuth && !publicRoutes.includes(pathname)) {
         router.push('/login');
       }
     };
@@ -25,7 +30,7 @@ export function useAuth() {
     if (status !== 'loading') {
       checkAuth();
     }
-  }, [router, session, status]);
+  }, [router, session, status, pathname]);
 
   return { 
     isAuthenticated, 
