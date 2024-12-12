@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -44,28 +44,7 @@ export function PropertiesClientComponent() {
   const [totalPages, setTotalPages] = useState(0);
   const ITEMS_PER_PAGE = 12;
 
-  useEffect(() => {
-    setIsClient(true);
-    fetchProperties();
-  }, []);
-
-  useEffect(() => {
-    if (properties.length > 0) {
-      const filtered = properties.filter(property => {
-        const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            property.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            property.location.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesType = typeFilter === 'all' || property.type === typeFilter;
-        const matchesListingType = listingTypeFilter === 'all' || property.listingType === listingTypeFilter;
-
-        return matchesSearch && matchesType && matchesListingType;
-      });
-      setFilteredProperties(filtered);
-    }
-  }, [properties, searchTerm, typeFilter, listingTypeFilter]);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/listings/public?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
@@ -84,11 +63,28 @@ export function PropertiesClientComponent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, ITEMS_PER_PAGE]);
 
   useEffect(() => {
+    setIsClient(true);
     fetchProperties();
-  }, [currentPage]);
+  }, [fetchProperties]);
+
+  useEffect(() => {
+    if (properties.length > 0) {
+      const filtered = properties.filter(property => {
+        const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            property.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            property.location.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesType = typeFilter === 'all' || property.type === typeFilter;
+        const matchesListingType = listingTypeFilter === 'all' || property.listingType === listingTypeFilter;
+
+        return matchesSearch && matchesType && matchesListingType;
+      });
+      setFilteredProperties(filtered);
+    }
+  }, [properties, searchTerm, typeFilter, listingTypeFilter]);
 
   if (!isClient) {
     return <div className="h-screen bg-gray-50" />;
