@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession, getSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function CreatePropertyPage() {
@@ -40,46 +40,35 @@ export default function CreatePropertyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
     try {
-      const session = await getSession();
-      const token = session?.user?.token;
-      
-      console.log('Session:', session);
-      console.log('Token:', token);
-
-      if (!token) {
+      if (!session?.user?.token) {
         throw new Error("Non authentifié");
       }
-
-      const requestData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        images,
-        features: [],
-      };
-
-      console.log('Request data:', requestData);
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${session.user.token}`
         },
-        credentials: 'include',
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          ...formData,
+          price: parseFloat(formData.price),
+          images,
+          features: []
+        })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la création");
+        const error = await response.json();
+        throw new Error(error.message);
       }
 
       toast.success("Annonce créée avec succès");
       router.push("/properties");
     } catch (error) {
-      console.error("Erreur détaillée:", error);
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la création de l'annonce");
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la création");
     } finally {
       setIsLoading(false);
     }
