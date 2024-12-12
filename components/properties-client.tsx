@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import dynamic from 'next/dynamic';
 import { PropertyCard } from "@/components/property-card";
+import { Button } from "@/components/ui/button";
 
 interface Property {
   id: string;
@@ -39,6 +40,9 @@ export function PropertiesClientComponent() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [listingTypeFilter, setListingTypeFilter] = useState("all");
   const [isClient, setIsClient] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
     setIsClient(true);
@@ -63,27 +67,28 @@ export function PropertiesClientComponent() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/listings/public`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/listings/public?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
+      );
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
-      const sortedProperties = data.sort((a: Property, b: Property) => {
-        if (a.user.isPremium && !b.user.isPremium) return -1;
-        if (!a.user.isPremium && b.user.isPremium) return 1;
-        return 0;
-      });
-
-      setProperties(sortedProperties);
-      setFilteredProperties(sortedProperties);
+      setProperties(data.listings);
+      setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
+      setFilteredProperties(data.listings);
     } catch (error) {
-      console.error("Erreur lors du chargement des propriétés:", error);
+      console.error("Erreur:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProperties();
+  }, [currentPage]);
 
   if (!isClient) {
     return <div className="h-screen bg-gray-50" />;
@@ -152,6 +157,28 @@ export function PropertiesClientComponent() {
           </p>
         </div>
       )}
+
+      <div className="flex justify-center gap-2 mt-8">
+        <Button
+          variant="outline"
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+        >
+          Précédent
+        </Button>
+        
+        <span className="flex items-center px-4">
+          Page {currentPage} sur {totalPages}
+        </span>
+        
+        <Button
+          variant="outline"
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
+          Suivant
+        </Button>
+      </div>
     </div>
   );
 }
