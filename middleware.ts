@@ -6,22 +6,28 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request })
   const path = request.nextUrl.pathname
 
-  // Protéger la route de création d'annonce
-  if (path === '/properties/create') {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  // Routes qui nécessitent une authentification
+  const protectedRoutes = [
+    '/properties/create',
+    '/agents',
+    '/profile',
+    '/profile/edit'
+  ]
 
-    // Vérifier si l'utilisateur est un agent
-    const isAgent = token.role === 'AGENT' || token.role === 'AGENT_PREMIUM'
-    if (!isAgent) {
-      return NextResponse.redirect(new URL('/pricing', request.url))
-    }
+  // Si l'utilisateur n'est pas authentifié et essaie d'accéder à une route protégée
+  if (!token && protectedRoutes.some(route => path.startsWith(route))) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', path)
+    return NextResponse.redirect(loginUrl)
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/properties/create']
+  matcher: [
+    '/properties/create',
+    '/agents/:path*',
+    '/profile/:path*'
+  ]
 } 

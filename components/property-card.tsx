@@ -10,7 +10,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-interface Property {
+export interface Feature {
+  name: string;
+  value: string;
+}
+
+export interface Property {
   id: string;
   title: string;
   description: string;
@@ -18,9 +23,15 @@ interface Property {
   type: string;
   listingType: string;
   location: string;
+  address: string;
   images: string[];
-  features: string[];
+  userId: string;
+  features: Feature[];
   user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
     isPremium: boolean;
     firstName: string;
     lastName: string;
@@ -134,22 +145,22 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
-            {property.features.includes('chambres') && (
+            {property.features.some(f => f.name === 'chambres') && (
               <div className="flex items-center gap-1">
                 <BedDouble className="w-4 h-4" />
-                <span>3 Ch.</span>
+                <span>{property.features.find(f => f.name === 'chambres')?.value} Ch.</span>
               </div>
             )}
-            {property.features.includes('sdb') && (
+            {property.features.some(f => f.name === 'sdb') && (
               <div className="flex items-center gap-1">
                 <Bath className="w-4 h-4" />
-                <span>2 SDB</span>
+                <span>{property.features.find(f => f.name === 'sdb')?.value} SDB</span>
               </div>
             )}
-            {property.features.includes('surface') && (
+            {property.features.some(f => f.name === 'surface') && (
               <div className="flex items-center gap-1">
                 <Square className="w-4 h-4" />
-                <span>150 m²</span>
+                <span>{property.features.find(f => f.name === 'surface')?.value}</span>
               </div>
             )}
           </div>
