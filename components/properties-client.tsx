@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -44,10 +44,44 @@ export function PropertiesClientComponent() {
   const [totalPages, setTotalPages] = useState(0);
   const ITEMS_PER_PAGE = 12;
 
+  const fetchProperties = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/listings/public?page=${currentPage}&limit=${ITEMS_PER_PAGE}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data?.listings) {
+        setProperties(data.listings);
+        setFilteredProperties(data.listings);
+        setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
+      } else {
+        setProperties([]);
+        setFilteredProperties([]);
+        setTotalPages(0);
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      setProperties([]);
+      setFilteredProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage]);
+
   useEffect(() => {
     setIsClient(true);
     fetchProperties();
-  }, []);
+  }, [fetchProperties]);
 
   useEffect(() => {
     if (properties.length > 0) {
@@ -64,31 +98,6 @@ export function PropertiesClientComponent() {
       setFilteredProperties(filtered);
     }
   }, [properties, searchTerm, typeFilter, listingTypeFilter]);
-
-  const fetchProperties = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/listings/public?page=${currentPage}&limit=${ITEMS_PER_PAGE}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setProperties(data.listings);
-      setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
-      setFilteredProperties(data.listings);
-    } catch (error) {
-      console.error("Erreur:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProperties();
-  }, [currentPage]);
 
   if (!isClient) {
     return <div className="h-screen bg-gray-50" />;
@@ -140,45 +149,49 @@ export function PropertiesClientComponent() {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProperties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
-      )}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProperties && filteredProperties.length > 0 ? (
+              filteredProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Aucune propriété trouvée
+                </h3>
+                <p className="mt-2 text-gray-500">
+                  Essayez de modifier vos critères de recherche
+                </p>
+              </div>
+            )}
+          </div>
 
-      {!isLoading && filteredProperties.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900">
-            Aucune propriété trouvée
-          </h3>
-          <p className="mt-2 text-gray-500">
-            Essayez de modifier vos critères de recherche
-          </p>
-        </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                Précédent
+              </Button>
+              
+              <span className="flex items-center px-4">
+                Page {currentPage} sur {totalPages}
+              </span>
+              
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Suivant
+              </Button>
+            </div>
+          )}
+        </>
       )}
-
-      <div className="flex justify-center gap-2 mt-8">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-        >
-          Précédent
-        </Button>
-        
-        <span className="flex items-center px-4">
-          Page {currentPage} sur {totalPages}
-        </span>
-        
-        <Button
-          variant="outline"
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-        >
-          Suivant
-        </Button>
-      </div>
     </div>
   );
 }
